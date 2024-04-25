@@ -1132,6 +1132,7 @@ class VSSM(nn.Module):
         downsample_version: str = "v2", # "v1", "v2", "v3"
         patchembed_version: str = "v1", # "v1", "v2"
         use_checkpoint=False,  
+        head=None,
         **kwargs,
     ):
         super().__init__()
@@ -1206,14 +1207,16 @@ class VSSM(nn.Module):
                 mlp_drop_rate=mlp_drop_rate,
                 gmlp=gmlp,
             ))
-
-        self.classifier = nn.Sequential(OrderedDict(
-            norm=norm_layer(self.num_features), # B,H,W,C
-            permute=(Permute(0, 3, 1, 2) if not self.channel_first else nn.Identity()),
-            avgpool=nn.AdaptiveAvgPool2d(1),
-            flatten=nn.Flatten(1),
-            head=nn.Linear(self.num_features, num_classes),
-        ))
+        if head == True:
+            self.classifier = nn.Sequential(OrderedDict(
+                norm=norm_layer(self.num_features), # B,H,W,C
+                permute=(Permute(0, 3, 1, 2) if not self.channel_first else nn.Identity()),
+                avgpool=nn.AdaptiveAvgPool2d(1),
+                flatten=nn.Flatten(1),
+                # head=nn.Linear(self.num_features, num_classes),
+            ))
+        else:
+            self.classifier = nn.Identity()
 
         self.apply(self._init_weights)
 
